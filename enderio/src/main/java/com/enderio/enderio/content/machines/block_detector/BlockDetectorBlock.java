@@ -3,8 +3,10 @@ package com.enderio.enderio.content.machines.block_detector;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DirectionalBlock;
@@ -66,14 +68,12 @@ public class BlockDetectorBlock extends DirectionalBlock {
     @Override
     protected int getSignal(BlockState pState, BlockGetter pLevel, BlockPos pPos, Direction pDirection) {
         if (!canConnectRedstone(pState, pLevel, pPos, pDirection)) {
-            pState.setValue(POWERED, false);
             return 0;
         }
         if (pLevel.getBlockState(pPos.relative(pState.getValue(FACING))).isAir()) {
-            pState.setValue(POWERED, false);
             return 0;
         }
-        pState.setValue(POWERED, true);
+
         return 15;
     }
 
@@ -83,11 +83,19 @@ public class BlockDetectorBlock extends DirectionalBlock {
     }
 
     @Override
-    protected BlockState updateShape(BlockState pState, Direction pDirection, BlockState pNeighborState,
-            LevelAccessor pLevel, BlockPos pPos, BlockPos pNeighborPos) {
-        if (pState.getValue(FACING) == pDirection) {
-            pLevel.blockUpdated(pPos, pState.getBlock());
+    protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighborBlock, BlockPos neighborPos, boolean movedByPiston) {
+        super.neighborChanged(state, level, pos, neighborBlock, neighborPos, movedByPiston);
+
+        if (level.isClientSide) {
+            return;
         }
-        return super.updateShape(pState, pDirection, pNeighborState, pLevel, pPos, pNeighborPos);
+
+        if (state.getValue(POWERED) != level.hasNeighborSignal(pos)) {
+            level.setBlock(pos, state.cycle(POWERED), Block.UPDATE_CLIENTS);
+
+            for (Direction direction : Direction.values()) {
+                level.updateNeighborsAt(pos.relative(direction), this);
+            }
+        }
     }
 }
