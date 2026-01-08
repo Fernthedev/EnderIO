@@ -1,9 +1,9 @@
 package com.enderio.base.common.util;
 
-import com.enderio.enderio.config.base.BaseConfig;
-import com.enderio.enderio.config.base.common.ItemsConfig;
-import com.enderio.enderio.content.tools.ToolsLang;
-import com.enderio.enderio.foundation.tag.EIOTags;
+
+import com.enderio.base.common.config.BaseConfig;
+import com.enderio.base.common.lang.EIOLang;
+import com.enderio.base.common.tag.EIOTags;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
